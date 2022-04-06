@@ -29,6 +29,7 @@ contract Habit is ERC721 {
         uint256 periodStart;
         uint256 periodEnd;
         uint256 periodTimesAccomplished;
+        string[] proofs;
     }
 
     struct HabitData {
@@ -59,11 +60,13 @@ contract Habit is ERC721 {
             timeframe,
             chainCommitment
         );
+        string[] memory proofs;
         Accomplishment memory accomplishment = Accomplishment(
             0,
             startTime,
             startTime + timeframe,
-            0
+            0,
+            proofs
         );
         habits[habitId] = HabitData(
             habitId,
@@ -80,7 +83,7 @@ contract Habit is ERC721 {
         return habitId;
     }
 
-    function done(uint256 habitId)
+    function done(uint256 habitId, string memory proof)
         public
         onlyHabitOwner(habitId)
         habitPeriodStarted(habitId)
@@ -89,6 +92,7 @@ contract Habit is ERC721 {
         HabitData storage habit = habits[habitId];
         Accomplishment storage accomplishment = habit.accomplishment;
         ++(accomplishment.chain);
+        accomplishment.proofs.push(proof);
         Commitment storage commitment = habit.commitment;
         if (
             accomplishment.periodTimesAccomplished + 1 ==

@@ -61,12 +61,13 @@ describe("Habit", function () {
         await network.provider.send("evm_setNextBlockTimestamp", [now])
         await habit.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
         await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
-        await habit.done(0);
+        await habit.done(0, "proof1");
 
         const createdHabit = await habit.getHabitData(0);
         expect(createdHabit.accomplishment.periodTimesAccomplished.toNumber()).to.equal(1);
         expect(createdHabit.accomplishment.chain.toNumber()).to.equal(1);
         expect(createdHabit.accomplishment.periodEnd.toNumber()).to.equal(exampleHabitData.startTime + exampleHabitData.timeframe)
+        expect(createdHabit.accomplishment.proofs[0]).to.equal("proof1")
       })
 
     it("Should increse the chain, change the period start and end time and reset the period count when calling done and accomplishing all the period times",
@@ -74,9 +75,9 @@ describe("Habit", function () {
         await network.provider.send("evm_setNextBlockTimestamp", [now])
         await habit.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
         await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
-        await habit.done(0);
+        await habit.done(0, "proof1");
         await network.provider.send("evm_setNextBlockTimestamp", [now + hour * 2])
-        await habit.done(0);
+        await habit.done(0, "proof2");
 
         const createdHabit = await habit.getHabitData(0);
         expect(createdHabit.accomplishment.periodTimesAccomplished.toNumber()).to.equal(0);
@@ -88,7 +89,7 @@ describe("Habit", function () {
     it("Should revert when you call done as not owner", async () => {
       const [_, ad1] = await ethers.getSigners();
       await habit.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
-      await expect(habit.connect(ad1).done(0)).to.be.revertedWith("Only the owner can interact with the habit");
+      await expect(habit.connect(ad1).done(0, "proof1")).to.be.revertedWith("Only the owner can interact with the habit");
     })
 
     it("Should revert when you call done and period has not started", async () => {
@@ -96,14 +97,14 @@ describe("Habit", function () {
       await network.provider.send("evm_setNextBlockTimestamp", [now])
       await habit.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
-      await expect(habit.done(0)).to.be.revertedWith("Habit period did not start yet.");
+      await expect(habit.done(0, "proof1")).to.be.revertedWith("Habit period did not start yet.");
     })
 
     it("Should revert when you call done and habit has expired", async () => {
       await network.provider.send("evm_setNextBlockTimestamp", [now])
       await habit.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour * 24 * 30])
-      await expect(habit.done(0)).to.be.revertedWith("HabitNotInValidState(0, true)");
+      await expect(habit.done(0, "proof1")).to.be.revertedWith("HabitNotInValidState(0, true)");
     })
   })
 
@@ -114,9 +115,9 @@ describe("Habit", function () {
       await network.provider.send("evm_setNextBlockTimestamp", [now])
       await habit.commit(...Object.values(exampleHabitData), { value: stakeAmount })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
-      await habit.done(0);
+      await habit.done(0, "proof1");
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour * 2])
-      await habit.done(0);
+      await habit.done(0, "proof1");
       const balanceBeforeClaim = await ethers.provider.getBalance(owner.address);
       const tx = await (await habit.claimStake(0)).wait();
       const gasSpent = tx.effectiveGasPrice.mul(tx.cumulativeGasUsed);
@@ -132,9 +133,9 @@ describe("Habit", function () {
       await network.provider.send("evm_setNextBlockTimestamp", [now])
       await habit.commit(...Object.values(exampleHabitData), { value: stakeAmount })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
-      await habit.done(0);
+      await habit.done(0, "proof1");
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour * 2])
-      await habit.done(0);
+      await habit.done(0, "proof1");
       await expect(habit.connect(ad1).claimStake(0)).to.be.revertedWith("Only the owner can interact with the habit");
     })
 
@@ -143,7 +144,7 @@ describe("Habit", function () {
       await network.provider.send("evm_setNextBlockTimestamp", [now])
       await habit.commit(...Object.values(exampleHabitData), { value: stakeAmount })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
-      await habit.done(0);
+      await habit.done(0, "proof1");
       await expect(habit.claimStake(0)).to.be.revertedWith("ChainCommitmentAccomplished(0, false)");
     })
 
@@ -152,9 +153,9 @@ describe("Habit", function () {
       await network.provider.send("evm_setNextBlockTimestamp", [now])
       await habit.commit(...Object.values(exampleHabitData), { value: stakeAmount })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
-      await habit.done(0);
+      await habit.done(0, "proof1");
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour * 2])
-      await habit.done(0);
+      await habit.done(0, "proof1");
       await habit.claimStake(0);
       await expect(habit.claimStake(0)).to.be.revertedWith("Stake already claimed.");
     })
@@ -167,7 +168,7 @@ describe("Habit", function () {
       await network.provider.send("evm_setNextBlockTimestamp", [now])
       await habit.commit(...Object.values(exampleHabitData), { value: stakeAmount })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
-      await habit.done(0);
+      await habit.done(0, "proof1");
       await network.provider.send("evm_setNextBlockTimestamp", [now + exampleHabitData.timeframe * 2])
       const balanceBeforeClaim = await ethers.provider.getBalance(ad1.address);
       const tx = await (await habit.connect(ad1).claimBrokenCommitment(0)).wait();

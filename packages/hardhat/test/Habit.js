@@ -45,12 +45,14 @@ describe("Habit", () => {
 
     const HabitNFTContract = await ethers.getContractFactory("HabitNFT", {
       libraries: {
+        NFTSVG: NFTSVG.address,
       },
     });
     habitNFT = await HabitNFTContract.deploy();
 
     const HabitContract = await ethers.getContractFactory("Habit", {
       libraries: {
+        HabitNFT: habitNFT.address,
       },
     });
     const HabitManagerContract = await ethers.getContractFactory("HabitManager", {
@@ -69,6 +71,8 @@ describe("Habit", () => {
     await network.provider.send("evm_setNextBlockTimestamp", [now])
     await habitManager.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
     const createdHabit = await habit.getHabitData(0);
+
+    console.log(await habit.tokenURI(0))
 
     expect(createdHabit.name).to.equal(exampleHabitData.name);
     expect(createdHabit.description).to.equal(exampleHabitData.description);

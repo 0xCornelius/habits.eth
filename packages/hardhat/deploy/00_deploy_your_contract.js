@@ -10,20 +10,47 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
   const { deployer } = await getNamedAccounts();
   const chainId = await getChainId();
 
-  await deploy("Habit", {
+  await deploy("NFTSVG", {
     from: deployer,
     args: [],
     log: true,
     waitConfirmations: 5,
   });
-  
+
+  const NFTSVG = await ethers.getContract("NFTSVG", deployer);
+
+  await deploy("HabitNFT", {
+    from: deployer,
+    args: [],
+    log: true,
+    waitConfirmations: 5,
+    libraries: {
+      NFTSVG: NFTSVG.address,
+    },
+  });
+
+  const HabitNFT = await ethers.getContract("HabitNFT", deployer);
+
+  await deploy("Habit", {
+    from: deployer,
+    args: [],
+    log: true,
+    waitConfirmations: 5,
+    libraries: {
+      HabitNFT: HabitNFT.address,
+    },
+  });
+
   const HabitContract = await ethers.getContract("Habit", deployer);
-  
+
   await deploy("HabitManager", {
     from: deployer,
     args: [HabitContract.address],
     log: true,
     waitConfirmations: 5,
+    libraries: {
+      HabitNFT: HabitNFT.address,
+    },
   });
 
   const HabitManagerContract = await ethers.getContract("HabitManager", deployer);

@@ -18,29 +18,29 @@ contract Habit is ERC721, Ownable {
 
     constructor() ERC721("Habit", "HABIT") {}
 
-    // function tokenURI(uint256 habitId)
-    //     public
-    //     view
-    //     virtual
-    //     override
-    //     returns (string memory)
-    // {
-    //     HabitStructs.HabitData memory habit = habits[habitId];
-    //     HabitNFT.HabitNFTData memory habitNFTData = HabitNFT.HabitNFTData({
-    //         name: habit.name,
-    //         description: habit.description,
-    //         id: habit.id,
-    //         chain: habit.accomplishment.chain,
-    //         chainCommitment: habit.commitment.chainCommitment,
-    //         timeframeString: HabitNFT.timeframeToDescription(
-    //             habit.commitment.timeframe
-    //         ),
-    //         timesPerTimeframe: habit.commitment.timesPerTimeframe,
-    //         stake: habit.stake,
-    //         beneficiary: habit.beneficiary
-    //     });
-    //     return HabitNFT.generateTokenURI(habitNFTData);
-    // }
+    function tokenURI(uint256 habitId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        HabitStructs.HabitData memory habit = habits[habitId];
+        HabitNFT.HabitNFTData memory habitNFTData = HabitNFT.HabitNFTData({
+            name: habit.name,
+            description: habit.description,
+            id: habit.id,
+            chain: habit.accomplishment.chain,
+            chainCommitment: habit.commitment.chainCommitment,
+            timeframeString: HabitNFT.timeframeToDescription(
+                habit.commitment.timeframe
+            ),
+            timesPerTimeframe: habit.commitment.timesPerTimeframe,
+            stake: habit.stake,
+            beneficiary: habit.beneficiary
+        });
+        return HabitNFT.generateTokenURI(habitNFTData);
+    }
 
     function getAllHabits()
         public

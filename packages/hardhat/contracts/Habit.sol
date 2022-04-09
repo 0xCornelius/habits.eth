@@ -1,184 +1,105 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.4;
 
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./libraries/HabitNFT.sol";
+import "./libraries/HabitStructs.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-error HabitAlreadyExpired(uint256 habitId);
-error HabitNotExpiredYet(uint256 habitId);
-error HabitNotInValidState(uint256 habitId, bool expired);
-error ChainCommitmentAccomplished(uint256 habitId, bool accomplished);
-
-contract Habit is ERC721 {
-    constructor() ERC721("Habit", "HBT") {}
+contract Habit is ERC721, Ownable {
+    using Counters for Counters.Counter;
 
     using Counters for Counters.Counter;
-    Counters.Counter private _habitIds;
+    Counters.Counter internal _habitIds;
 
-    struct Commitment {
-        uint256 timesPerTimeframe;
-        //Habit should be done every X time
-        uint256 timeframe;
-        //Amount of times the habit has to be done to allow the bid amount to be withdrawn
-        uint256 chainCommitment;
-    }
+    mapping(uint256 => HabitStructs.HabitData) habits;
 
-    struct Accomplishment {
-        //Amount of times the habit has been accomplished
-        uint256 chain;
-        uint256 periodStart;
-        uint256 periodEnd;
-        uint256 periodTimesAccomplished;
-        string[] proofs;
-    }
+    constructor() ERC721("Habit", "HABIT") {}
 
-    struct HabitData {
-        uint256 id;
-        string name;
-        string description;
-        uint256 stake;
-        bool stakeClaimed;
-        address beneficiary;
-        Commitment commitment;
-        Accomplishment accomplishment;
-    }
+    // function tokenURI(uint256 habitId)
+    //     public
+    //     view
+    //     virtual
+    //     override
+    //     returns (string memory)
+    // {
+    //     HabitStructs.HabitData memory habit = habits[habitId];
+    //     HabitNFT.HabitNFTData memory habitNFTData = HabitNFT.HabitNFTData({
+    //         name: habit.name,
+    //         description: habit.description,
+    //         id: habit.id,
+    //         chain: habit.accomplishment.chain,
+    //         chainCommitment: habit.commitment.chainCommitment,
+    //         timeframeString: HabitNFT.timeframeToDescription(
+    //             habit.commitment.timeframe
+    //         ),
+    //         timesPerTimeframe: habit.commitment.timesPerTimeframe,
+    //         stake: habit.stake,
+    //         beneficiary: habit.beneficiary
+    //     });
+    //     return HabitNFT.generateTokenURI(habitNFTData);
+    // }
 
-    mapping(uint256 => HabitData) habits;
-
-    function commit(
-        string memory habitName,
-        string memory description,
-        uint256 timeframe,
-        uint256 chainCommitment,
-        address beneficiary,
-        uint256 startTime,
-        uint256 timesPerTimeframe
-    ) public payable returns (uint256) {
-        uint256 habitId = _habitIds.current();
-        Commitment memory commitment = Commitment(
-            timesPerTimeframe,
-            timeframe,
-            chainCommitment
-        );
-        string[] memory proofs;
-        Accomplishment memory accomplishment = Accomplishment(
-            0,
-            startTime,
-            startTime + timeframe,
-            0,
-            proofs
-        );
-        habits[habitId] = HabitData(
-            habitId,
-            habitName,
-            description,
-            msg.value,
-            false,
-            beneficiary,
-            commitment,
-            accomplishment
-        );
-        _mint(msg.sender, habitId);
-        _habitIds.increment();
-        return habitId;
-    }
-
-    function done(uint256 habitId, string memory proof)
+    function getAllHabits()
         public
-        onlyHabitOwner(habitId)
-        habitPeriodStarted(habitId)
-        habitExpired(habitId, false)
+        view
+        returns (HabitStructs.HabitDataWithOwner[] memory)
     {
-        HabitData storage habit = habits[habitId];
-        Accomplishment storage accomplishment = habit.accomplishment;
-        ++(accomplishment.chain);
-        accomplishment.proofs.push(proof);
-        Commitment storage commitment = habit.commitment;
-        if (
-            accomplishment.periodTimesAccomplished + 1 ==
-            commitment.timesPerTimeframe
-        ) {
-            accomplishment.periodTimesAccomplished = 0;
-            uint256 newPeriodStart = accomplishment.periodEnd;
-            accomplishment.periodStart = newPeriodStart;
-            accomplishment.periodEnd = newPeriodStart + commitment.timeframe;
-        } else {
-            ++(accomplishment.periodTimesAccomplished);
+        HabitStructs.HabitDataWithOwner[]
+            memory allHabits = new HabitStructs.HabitDataWithOwner[](
+                _habitIds.current()
+            );
+        for (uint256 i; i < _habitIds.current(); ++i) {
+            allHabits[i] = HabitStructs.HabitDataWithOwner(
+                habits[i],
+                ownerOf(i)
+            );
         }
-    }
-
-    function claimStake(uint256 habitId)
-        public
-        onlyHabitOwner(habitId)
-        chainCommitmentDone(habitId, true)
-        stakeNotClaimed(habitId)
-    {
-        HabitData storage habit = habits[habitId];
-        (bool sent, ) = msg.sender.call{value: habit.stake}("");
-        require(sent, "Failed to send Ether");
-        habit.stakeClaimed = true;
-    }
-
-    function claimBrokenCommitment(uint256 habitId)
-        public
-        habitExpired(habitId, true)
-        chainCommitmentDone(habitId, false)
-        stakeNotClaimed(habitId)
-    {
-        HabitData storage habit = habits[habitId];
-        (bool sent, ) = habit.beneficiary.call{value: habit.stake}("");
-        require(sent, "Failed to send Ether");
-        habit.stakeClaimed = true;
+        return allHabits;
     }
 
     function getHabitData(uint256 habitId)
         public
         view
-        returns (HabitData memory)
+        returns (HabitStructs.HabitData memory)
     {
         return habits[habitId];
     }
 
-    modifier stakeNotClaimed(uint256 habitId) {
-        require(!habits[habitId].stakeClaimed, "Stake already claimed.");
-        _;
+    function mint(HabitStructs.HabitData memory _habitData, address minter)
+        public
+        onlyOwner
+    {
+        uint256 habitId = _habitData.id;
+        habits[habitId] = _habitData;
+        _mint(minter, habitId);
+        _habitIds.increment();
     }
 
-    modifier onlyHabitOwner(uint256 habitId) {
-        require(
-            msg.sender == ownerOf(habitId),
-            "Only the owner can interact with the habit"
-        );
-        _;
+    function done(
+        uint256 habitId,
+        string memory newProof,
+        uint256 newPeriodStart,
+        uint256 newPeriodEnd,
+        uint256 newPeriodTimesAccomplished
+    ) public onlyOwner {
+        HabitStructs.HabitData storage habit = habits[habitId];
+        HabitStructs.Accomplishment storage accomplishment = habit
+            .accomplishment;
+        ++(accomplishment.chain);
+        accomplishment.proofs.push(newProof);
+        accomplishment.periodStart = newPeriodStart;
+        accomplishment.periodEnd = newPeriodEnd;
+        accomplishment.periodTimesAccomplished = newPeriodTimesAccomplished;
     }
 
-    modifier chainCommitmentDone(uint256 habitId, bool commitmentDone) {
-        HabitData storage habit = habits[habitId];
-        bool isAccomplished = habit.accomplishment.chain >=
-            habit.commitment.chainCommitment;
-        if (commitmentDone != isAccomplished) {
-            revert ChainCommitmentAccomplished(habitId, isAccomplished);
-        }
-        _;
+    function stakeClaimed(uint256 habitId) public onlyOwner {
+        habits[habitId].stakeClaimed = true;
     }
 
-    modifier habitPeriodStarted(uint256 habitId) {
-        require(
-            block.timestamp >= habits[habitId].accomplishment.periodStart,
-            "Habit period did not start yet."
-        );
-        _;
-    }
-
-    modifier habitExpired(uint256 habitId, bool expired) {
-        bool habitIsExpired = block.timestamp >
-            habits[habitId].accomplishment.periodEnd;
-        if (habitIsExpired != expired) {
-            revert HabitNotInValidState({
-                habitId: habitId,
-                expired: habitIsExpired
-            });
-        }
-        _;
+    function getCurrentHabitId() public view returns (uint256) {
+        return _habitIds.current();
     }
 }

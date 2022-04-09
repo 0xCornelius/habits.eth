@@ -1,0 +1,86 @@
+.habit-visualizer-container {
+    border: 1px #cccccc solid;
+    border-radius: 6px;
+
+    .body {
+        text-align: left;
+        display: block;
+        
+        .row {
+            margin-top: 10px;
+        }
+
+        .habit-data-and-actions {
+            display: flex;
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 20px;
+        }
+        
+        .right {
+            float: right;
+            display: flex;
+            justify-content: center;
+            height: 200px;
+
+            .right-content {
+                text-align: center;
+                width: 165px;
+            }
+
+            .time-left {
+                color: #ff4c30;
+                height: 100px;
+
+                .period-time-left {
+                    font-size: 25px;
+                    font-weight: bold;
+                    border: 2px solid #cccccc;
+                    border-radius: 6px;
+                    padding: 10px;
+                    margin: 10px 0px;
+                    display: block;
+                }
+            }
+
+            .time-to-wait {
+                max-width: 200px;;
+            }
+        }
+        
+        .left {
+            width: 100%;
+            float: left;
+        }
+
+        .progress-visualizer {
+            display: inline-block;
+            margin: 10px 0px;
+            .dot {
+                margin-right: 5px;
+                height: 10px;
+                width: 10px;
+                background-color: #bbb;
+                border-radius: 50%;
+                display: inline-block;
+            }
+            
+            .dot.done {
+                background-color: green;
+            }
+        }
+
+        .done-button {
+            border-radius: 50%;
+
+            border: none;
+            padding: 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            height: 75px;
+        }
+    }
+}

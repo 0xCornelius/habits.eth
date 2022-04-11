@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import moment from 'moment';
 import { useHistory } from "react-router-dom";
 import StakeInput from "../components/StakeInput/StakeInput";
+import TextArea from "antd/lib/input/TextArea";
+import { InfoCircleFilled, InfoCircleOutlined } from "@ant-design/icons";
+import ReactTooltip from "react-tooltip";
 
 export default function CreateHabit({ tx, writeContracts }) {
 
@@ -72,6 +75,15 @@ export default function CreateHabit({ tx, writeContracts }) {
                 style={{ textAlign: "left", padding: "20px" }}
             >
                 <Form.Item
+                    name="stake"
+                    style={{ textAlign: "center" }}
+                    rules={[{ required: true, message: 'Input how much you want to stake' }]}>
+                    <h2>Stake</h2>
+                    <StakeInput name={"stake"} createNewHabitForm={createNewHabitForm} />
+                </Form.Item>
+
+                <Form.Item
+                    style={{ display: "inline-block", width: "48%" }}
                     label="Habit Name"
                     name="habitName"
                     rules={[{ required: true, message: 'Input your habit name' }]}>
@@ -79,26 +91,31 @@ export default function CreateHabit({ tx, writeContracts }) {
                 </Form.Item>
 
                 <Form.Item
-                    label="Description"
-                    name="habitDescription"
-                    rules={[{ required: true, message: 'Input your habit description' }]}>
-                    <Input />
-                </Form.Item>
-
-                <Form.Item
-                    label="Beneficiary"
+                    style={{ display: "inline-block", width: "48%", float: "right" }}
+                    label={<div>
+                        <span style={{ marginRight: "5px" }}>
+                            Beneficiary
+                        </span>
+                        <InfoCircleOutlined data-tip data-for={`beneficiary`} />
+                        <ReactTooltip id={`beneficiary`} place="right" type="info" effect="solid" >
+                            <div style={{width: "130px"}}>
+                                Who will receive your stake if you break your commitment
+                            </div>
+                        </ReactTooltip>
+                    </div>}
                     name="beneficiary"
                     rules={[{ required: true, message: 'Input a valid address as beneficiary' }]}>
                     <Input />
                 </Form.Item>
 
+
                 <Form.Item
-                    label="Stake"
-                    name="stake"
-                    rules={[{ required: true, message: 'Input how much you want to stake' }]}>
-                    {/* <InputNumber defaultValue="0.1" size="large" style={{ fontSize: "30px" }} addonAfter="ETH" /> */}
-                    <StakeInput name={"stake"} createNewHabitForm={createNewHabitForm}/>
+                    label="Description"
+                    name="habitDescription"
+                    rules={[{ required: true, message: 'Input your habit description' }]}>
+                    <TextArea maxLength={400} style={{ height: 60 }} />
                 </Form.Item>
+
                 <div style={{ display: "inline-block", width: "70%" }}>
                     <div style={{ display: "flex", alignItems: "center" }}>
                         <span style={{ marginRight: "10px" }}>
@@ -147,9 +164,9 @@ export default function CreateHabit({ tx, writeContracts }) {
                     </div>
                 </Form.Item>
 
-                <Form.Item>
-                    <Button style={{ float: "right" }} type="primary" size="large" htmlType="submit">
-                        Submit
+                <Form.Item style={{ textAlign: "center" }}>
+                    <Button style={{ width: "20%", marginTop: "30px" }} type="primary" size="large" htmlType="submit">
+                        Create
                     </Button>
                 </Form.Item>
             </Form>

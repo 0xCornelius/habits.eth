@@ -3,6 +3,7 @@ import { ethers } from "ethers";
 import React, { useState } from "react";
 import moment from 'moment';
 import { useHistory } from "react-router-dom";
+import StakeInput from "../components/StakeInput/StakeInput";
 
 export default function CreateHabit({ tx, writeContracts }) {
 
@@ -56,9 +57,10 @@ export default function CreateHabit({ tx, writeContracts }) {
 
 
     return (
-        <div style={{ border: "1px solid #cccccc", width: 1200, margin: "auto", marginTop: 64, borderRadius: "6px" }}>
+        <div style={{ border: "1px solid #cccccc", width: 1200, margin: "auto", marginTop: 25, borderRadius: "6px" }}>
             <div className="header">Create new habit</div>
             <Form
+                requiredMark={false}
                 form={createNewHabitForm}
                 name="basic"
                 labelCol={{ span: 8 }}
@@ -94,55 +96,59 @@ export default function CreateHabit({ tx, writeContracts }) {
                     label="Stake"
                     name="stake"
                     rules={[{ required: true, message: 'Input how much you want to stake' }]}>
-                    <Input />
+                    {/* <InputNumber defaultValue="0.1" size="large" style={{ fontSize: "30px" }} addonAfter="ETH" /> */}
+                    <StakeInput name={"stake"} createNewHabitForm={createNewHabitForm}/>
                 </Form.Item>
-
-                <div style={{ display: "flex", alignItems: "center" }}>
-                    <span style={{ marginRight: "10px" }}>
-                        I will repeat my habit
-                    </span>
-                    <Form.Item
-                        style={{ marginBottom: 0 }}
-                        name="timesPerTimeframe">
-                        <InputNumber size="small" min={1} onChange={setTimesPerTimeframe} />
-                    </Form.Item>
-                    <span style={{ marginRight: "10px", marginLeft: "10px" }}>
-                        times per
-                    </span>
-                    <Form.Item
-                        style={{ marginBottom: 0 }}
-                        name="timeframe">
-                        <Select size="small" style={{ width: "120px" }} onChange={setTimeframe}>
-                            <Option value={day}>Day</Option>
-                            <Option value={week}>Week</Option>
-                            <Option value={month}>Month</Option>
-                            <Option value={year}>Year</Option>
-                        </Select>
-                    </Form.Item>
-                    <span style={{ marginRight: "10px", marginLeft: "10px" }}>
-                        for
-                    </span>
-                    <Form.Item
-                        style={{ marginBottom: 0 }}
-                        name="chainCommitmentInTimeframes">
-                        <InputNumber default={100} size="small" min={1} onChange={setChainCommitmentInTimeframes} />
-                    </Form.Item>
-                    <span style={{ marginLeft: "10px" }}>
-                        {timeframeToName[timeframe]}s
-                    </span>
+                <div style={{ display: "inline-block", width: "70%" }}>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                        <span style={{ marginRight: "10px" }}>
+                            I will repeat my habit
+                        </span>
+                        <Form.Item
+                            style={{ marginBottom: 0 }}
+                            name="timesPerTimeframe">
+                            <InputNumber size="small" min={1} onChange={setTimesPerTimeframe} />
+                        </Form.Item>
+                        <span style={{ marginRight: "10px", marginLeft: "10px" }}>
+                            times per
+                        </span>
+                        <Form.Item
+                            style={{ marginBottom: 0 }}
+                            name="timeframe">
+                            <Select size="small" style={{ width: "120px" }} onChange={setTimeframe}>
+                                <Option value={day}>Day</Option>
+                                <Option value={week}>Week</Option>
+                                <Option value={month}>Month</Option>
+                                <Option value={year}>Year</Option>
+                            </Select>
+                        </Form.Item>
+                        <span style={{ marginRight: "10px", marginLeft: "10px" }}>
+                            for
+                        </span>
+                        <Form.Item
+                            style={{ marginBottom: 0 }}
+                            name="chainCommitmentInTimeframes">
+                            <InputNumber default={100} size="small" min={1} onChange={setChainCommitmentInTimeframes} />
+                        </Form.Item>
+                        <span style={{ marginLeft: "10px" }}>
+                            {timeframeToName[timeframe]}s
+                        </span>
+                    </div>
+                    <div style={{ fontSize: "12px", color: "gray" }}>
+                        This means that you will have to repeat your habit {timesPerTimeframe * chainCommitmentInTimeframes} times to recover your stake.
+                    </div>
                 </div>
-                <div style={{ fontSize: "12px", color: "gray" }}>
-                    This means that you will have to repeat your habit {timesPerTimeframe * chainCommitmentInTimeframes} times to recover your money.
-                </div>
-
-                <Form.Item label="Habit start date" name="startDate"
+                <Form.Item style={{ display: "inline-block", width: "30%" }} name="startDate"
                     rules={[{ required: true }]}>
-                    <DatePicker style={{ marginRight: "auto", marginLeft: 0 }}
-                        defaultValue={formDefaults.startDate} />
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                        <span style={{ marginRight: "10px" }}>Habit start date</span>
+                        <DatePicker
+                            defaultValue={formDefaults.startDate} />
+                    </div>
                 </Form.Item>
 
                 <Form.Item>
-                    <Button type="primary" htmlType="submit">
+                    <Button style={{ float: "right" }} type="primary" size="large" htmlType="submit">
                         Submit
                     </Button>
                 </Form.Item>

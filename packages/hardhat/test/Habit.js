@@ -72,8 +72,6 @@ describe("Habit", () => {
     await habitManager.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
     const createdHabit = await habit.getHabitData(0);
 
-    console.log(await habit.tokenURI(0))
-
     expect(createdHabit.name).to.equal(exampleHabitData.name);
     expect(createdHabit.description).to.equal(exampleHabitData.description);
     expect(createdHabit.commitment.timeframe.toNumber()).to.equal(exampleHabitData.timeframe);
@@ -94,6 +92,8 @@ describe("Habit", () => {
         await habitManager.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
         await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
         await habitManager.done(0, "proof1");
+
+        console.log(await habit.tokenURI(0))
 
         const createdHabit = await habit.getHabitData(0);
         expect(createdHabit.accomplishment.periodTimesAccomplished.toNumber()).to.equal(1);

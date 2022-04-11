@@ -9,7 +9,6 @@ import "./libraries/HabitStructs.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Habit is ERC721, Ownable {
-    using Counters for Counters.Counter;
 
     using Counters for Counters.Counter;
     Counters.Counter internal _habitIds;

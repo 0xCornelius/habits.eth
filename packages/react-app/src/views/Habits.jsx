@@ -52,8 +52,7 @@ export default function Habits({
 
     return (
         <div style={{ marginBottom: "80px" }}>
-            <h1 style={{ marginTop: "20px" }}>habits.eth:</h1>
-            <div style={{ width: 1200, margin: "auto" }}>
+            <div style={{ width: 1200, margin: "auto", marginTop: "20px", }}>
                 {userHabits.map((h) =>
                     <div style={{marginBottom: "30px"}}>
                         <HabitVisualizer {...h} onDoneClicked={onDoneClicked} />

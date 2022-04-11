@@ -15135,24 +15135,12 @@ table tr th.ant-table-selection-column .ant-radio-wrapper {
   margin: -1px 20px 0;
   padding: 0;
 }
-.ant-menu-horizontal:not(.ant-menu-dark) > .ant-menu-item-active,
-.ant-menu-horizontal:not(.ant-menu-dark) > .ant-menu-item-open,
-.ant-menu-horizontal:not(.ant-menu-dark) > .ant-menu-item-selected,
-.ant-menu-horizontal:not(.ant-menu-dark) > .ant-menu-item:hover,
-.ant-menu-horizontal:not(.ant-menu-dark) > .ant-menu-submenu-active,
-.ant-menu-horizontal:not(.ant-menu-dark) > .ant-menu-submenu-open,
-.ant-menu-horizontal:not(.ant-menu-dark) > .ant-menu-submenu-selected,
-.ant-menu-horizontal:not(.ant-menu-dark) > .ant-menu-submenu:hover {
-  color: #2caad9;
-  border-bottom: 2px solid #2caad9;
-}
 .ant-menu-horizontal > .ant-menu-item,
 .ant-menu-horizontal > .ant-menu-submenu {
   position: relative;
   top: 1px;
   display: inline-block;
   vertical-align: bottom;
-  border-bottom: 2px solid transparent;
 }
 .ant-menu-horizontal > .ant-menu-submenu > .ant-menu-submenu-title {
   padding: 0;

@@ -257,7 +257,7 @@ function App(props) {
         logoutOfWeb3Modal={logoutOfWeb3Modal}
         USE_NETWORK_SELECTOR={USE_NETWORK_SELECTOR}
       />
-      <Menu style={{ textAlign: "center", marginTop: 40 }} selectedKeys={[location.pathname]} mode="horizontal">
+      <Menu style={{ display: "block", textAlign: "center", marginTop: 40 }} selectedKeys={[location.pathname]} mode="horizontal">
         <Menu.Item key="/">
           <Link to="/">Your Habits</Link>
         </Menu.Item>
@@ -265,6 +265,7 @@ function App(props) {
           <Link to="/create">Create habit</Link>
         </Menu.Item>
       </Menu>
+      
 
       <Switch>
         <Route exact path="/">

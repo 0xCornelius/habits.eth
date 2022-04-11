@@ -113,7 +113,7 @@ export default function CreateHabit({ tx, writeContracts }) {
                     label="Description"
                     name="habitDescription"
                     rules={[{ required: true, message: 'Input your habit description' }]}>
-                    <TextArea maxLength={400} style={{ height: 60 }} />
+                    <TextArea maxLength={300} style={{ height: 60 }} />
                 </Form.Item>
 
                 <div style={{ display: "inline-block", width: "70%" }}>

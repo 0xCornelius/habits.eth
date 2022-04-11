@@ -1,6 +1,7 @@
 import { Button, Card, Checkbox, DatePicker, Divider, Form, Input, InputNumber, Progress, Select, Slider, Spin, Switch } from "antd";
 import Countdown from 'react-countdown';
 import ReactTooltip from "react-tooltip";
+import { Address } from "../../components";
 
 export default function HabitVisualizer({
     id,
@@ -59,14 +60,24 @@ export default function HabitVisualizer({
             <div className="body">
                 <div className="habit-data-and-actions">
                     <div className="left">
-                        <div>
-                            {description}
+                        <div className="row">
+                            <div className="label">Description</div>
+                            <div data-tip data-for={`description`} className="value">{description}</div>
+                            <ReactTooltip id={`description`} place="top" type="info" >
+                                <div style={{ maxWidth: 350 }}>
+                                    {description}
+                                </div>
+                            </ReactTooltip>
                         </div>
                         <div className="row">
-                            Beneficiary: {beneficiary}
+                            <div className="label">Beneficiary: </div>
+                            <div className="value">
+                                <Address address={beneficiary} hideIdenticon={true} hideCopy={true} size={"long"} fontSize={14} />
+                            </div>
                         </div>
                         <div className="row">
-                            Stake: {stake} ETH
+                            <div className="label">Stake: </div>
+                            <div className="value">{stake} ETH</div>
                         </div>
                         <div className="progress-visualizer">
                             {[...Array(chainCommitment)].map((e, i) =>

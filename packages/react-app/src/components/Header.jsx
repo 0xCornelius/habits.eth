@@ -19,5 +19,5 @@ export default function Header({link, title, subTitle}) {
 Header.defaultProps = {
   link: "https://github.com/austintgriffith/scaffold-eth",
   title: "habits.eth",
-  subTitle: "A descentralized way of commiting and tricking your habits built with 🏗 scaffold-eth",
+  subTitle: "A descentralized way of commiting and tracking your habits built with 🏗 scaffold-eth",
 }

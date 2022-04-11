@@ -7,6 +7,8 @@ import { ethers } from "ethers";
 import { Address, Balance, Events } from "../components";
 import { useContractReader } from "eth-hooks";
 import HabitVisualizer from "./HabitVisualizer/HabitVisualizer";
+import { LoadingOutlined } from '@ant-design/icons';
+import { Link, Redirect } from "react-router-dom";
 
 const cleanHabit = (contractHabit) => {
     const cAccomplishment = contractHabit.accomplishment;
@@ -43,22 +45,37 @@ export default function Habits({
     readContracts,
     writeContracts,
 }) {
-    const allHabits = useContractReader(readContracts, "Habit", "getAllHabits") || [];
-    const userHabits = allHabits.filter((h) => h.owner == address).map(h => cleanHabit(h.habitData));
+    const allHabits = useContractReader(readContracts, "Habit", "getAllHabits");
+    const userHabits = allHabits ? allHabits.filter((h) => h.owner == address).map(h => cleanHabit(h.habitData)) : [];
 
     const onDoneClicked = async (habitId) => {
         const result = tx(writeContracts.HabitManager.done(habitId, "proof"), update => { });
     }
 
+    const antIcon = <LoadingOutlined style={{ fontSize: 60 }} spin />;
+
     return (
         <div style={{ marginBottom: "80px" }}>
-            <div style={{ width: 1200, margin: "auto", marginTop: "20px", }}>
-                {userHabits.map((h) =>
-                    <div style={{marginBottom: "30px"}}>
-                        <HabitVisualizer {...h} onDoneClicked={onDoneClicked} />
+            {allHabits ?
+                userHabits && userHabits.length > 0 ?
+
+                    <div style={{ width: 800, margin: "auto", marginTop: "20px", }}>
+                        {userHabits.map((h) =>
+                            <div style={{ marginBottom: "30px" }}>
+                                <HabitVisualizer {...h} onDoneClicked={onDoneClicked} />
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
+                    :
+                    <div style={{ padding: 20 }}>
+                        <h2>You haven't created any habit yet. </h2>
+                        <h2><Link to="/create">Click here to create your first habit.</Link></h2>
+                    </div>
+                :
+                <Spin style={{ padding: 20 }} indicator={antIcon} />
+            }
+
+
         </div>
     );
 }

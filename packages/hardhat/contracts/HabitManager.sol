@@ -84,11 +84,11 @@ contract HabitManager {
         chainCommitmentDone(habitId, true)
         stakeNotClaimed(habitId)
     {
+        habitContract.stakeClaimed(habitId);
         (bool sent, ) = msg.sender.call{
             value: habitContract.getHabitData(habitId).stake
         }("");
         require(sent, "Failed to send Ether");
-        habitContract.stakeClaimed(habitId);
     }
 
     function claimBrokenCommitment(uint256 habitId)
@@ -97,10 +97,10 @@ contract HabitManager {
         chainCommitmentDone(habitId, false)
         stakeNotClaimed(habitId)
     {
+        habitContract.stakeClaimed(habitId);
         HabitStructs.HabitData memory habit = habitContract.getHabitData(habitId);
         (bool sent, ) = habit.beneficiary.call{value: habit.stake}("");
         require(sent, "Failed to send Ether");
-        habitContract.stakeClaimed(habitId);
     }
 
     modifier stakeNotClaimed(uint256 habitId) {

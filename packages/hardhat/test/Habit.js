@@ -7,6 +7,7 @@ use(solidity);
 describe("Habit", () => {
   let habit;
   let habitManager;
+  let erc20Mock;
 
   let habitNFT;
   let NFTSVG;
@@ -16,6 +17,9 @@ describe("Habit", () => {
   const hour = 60 * 60;
 
   let exampleHabitData;
+
+  let ethToken = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+
 
   // quick fix to let gas reporter fetch data from gas station & coinmarketcap
   before((done) => {
@@ -36,6 +40,10 @@ describe("Habit", () => {
     }
 
     await hre.network.provider.send("hardhat_reset")
+
+    const ERC20Mock = await ethers.getContractFactory("ERC20Mock");
+    erc20Mock = await ERC20Mock.deploy();
+    erc20Mock.mint(ethers.utils.parseEther("10000"));
 
     const HabitStructsContract = await ethers.getContractFactory("HabitStructs");
     habitStructs = await HabitStructsContract.deploy();
@@ -67,40 +75,47 @@ describe("Habit", () => {
     await habit.transferOwnership(habitManager.address);
   })
 
-  it("Should mint habit with commitETH", async () => {
-    await network.provider.send("evm_setNextBlockTimestamp", [now])
-    await habitManager.commitETH(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
-    const createdHabit = await habit.getHabitData(0);
+  describe("Mint", () => {
 
-    expect(createdHabit.name).to.equal(exampleHabitData.name);
-    expect(createdHabit.description).to.equal(exampleHabitData.description);
-    expect(createdHabit.commitment.timeframe.toNumber()).to.equal(exampleHabitData.timeframe);
-    expect(createdHabit.commitment.timesPerTimeframe.toNumber()).to.equal(exampleHabitData.timesPerTimeframe);
-    expect(createdHabit.commitment.chainCommitment.toNumber()).to.equal(exampleHabitData.chainCommitment);
-    expect(createdHabit.accomplishment.chain.toNumber()).to.equal(0);
-    expect(createdHabit.accomplishment.periodStart.toNumber()).to.equal(now);
-    expect(createdHabit.accomplishment.periodEnd.toNumber()).to.equal(now + exampleHabitData.timeframe);
-    expect(createdHabit.accomplishment.periodTimesAccomplished.toNumber()).to.equal(0);
-    expect(createdHabit.beneficiary).to.equal(exampleHabitData.beneficiary);
-    expect(createdHabit.commitment.stakeAmount).to.equal(ethers.utils.parseEther("1"));
-  });
 
-  it("Should mint habit with commit", async () => {
-    await network.provider.send("evm_setNextBlockTimestamp", [now])
-    await habitManager.commitETH(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
-    const createdHabit = await habit.getHabitData(0);
+    it("Should mint habit with commitETH", async () => {
+      await network.provider.send("evm_setNextBlockTimestamp", [now])
+      await habitManager.commitETH(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
+      const createdHabit = await habit.getHabitData(0);
 
-    expect(createdHabit.name).to.equal(exampleHabitData.name);
-    expect(createdHabit.description).to.equal(exampleHabitData.description);
-    expect(createdHabit.commitment.timeframe.toNumber()).to.equal(exampleHabitData.timeframe);
-    expect(createdHabit.commitment.timesPerTimeframe.toNumber()).to.equal(exampleHabitData.timesPerTimeframe);
-    expect(createdHabit.commitment.chainCommitment.toNumber()).to.equal(exampleHabitData.chainCommitment);
-    expect(createdHabit.accomplishment.chain.toNumber()).to.equal(0);
-    expect(createdHabit.accomplishment.periodStart.toNumber()).to.equal(now);
-    expect(createdHabit.accomplishment.periodEnd.toNumber()).to.equal(now + exampleHabitData.timeframe);
-    expect(createdHabit.accomplishment.periodTimesAccomplished.toNumber()).to.equal(0);
-    expect(createdHabit.beneficiary).to.equal(exampleHabitData.beneficiary);
-    expect(createdHabit.commitment.stakeAmount).to.equal(ethers.utils.parseEther("1"));
+      expect(createdHabit.name).to.equal(exampleHabitData.name);
+      expect(createdHabit.description).to.equal(exampleHabitData.description);
+      expect(createdHabit.commitment.timeframe.toNumber()).to.equal(exampleHabitData.timeframe);
+      expect(createdHabit.commitment.timesPerTimeframe.toNumber()).to.equal(exampleHabitData.timesPerTimeframe);
+      expect(createdHabit.commitment.chainCommitment.toNumber()).to.equal(exampleHabitData.chainCommitment);
+      expect(createdHabit.accomplishment.chain.toNumber()).to.equal(0);
+      expect(createdHabit.accomplishment.periodStart.toNumber()).to.equal(now);
+      expect(createdHabit.accomplishment.periodEnd.toNumber()).to.equal(now + exampleHabitData.timeframe);
+      expect(createdHabit.accomplishment.periodTimesAccomplished.toNumber()).to.equal(0);
+      expect(createdHabit.beneficiary).to.equal(exampleHabitData.beneficiary);
+      expect(createdHabit.commitment.stakeAmount).to.equal(ethers.utils.parseEther("1"));
+      expect(createdHabit.commitment.tokenStaked).to.equal(ethToken);
+    });
+
+    it("Should mint habit with commit", async () => {
+      await network.provider.send("evm_setNextBlockTimestamp", [now])
+      await erc20Mock.increaseAllowance(habitManager.address, ethers.utils.parseEther("10"));
+      await habitManager.commit(...Object.values(exampleHabitData), erc20Mock.address, ethers.utils.parseEther("10"))
+      const createdHabit = await habit.getHabitData(0);
+
+      expect(createdHabit.name).to.equal(exampleHabitData.name);
+      expect(createdHabit.description).to.equal(exampleHabitData.description);
+      expect(createdHabit.commitment.timeframe.toNumber()).to.equal(exampleHabitData.timeframe);
+      expect(createdHabit.commitment.timesPerTimeframe.toNumber()).to.equal(exampleHabitData.timesPerTimeframe);
+      expect(createdHabit.commitment.chainCommitment.toNumber()).to.equal(exampleHabitData.chainCommitment);
+      expect(createdHabit.accomplishment.chain.toNumber()).to.equal(0);
+      expect(createdHabit.accomplishment.periodStart.toNumber()).to.equal(now);
+      expect(createdHabit.accomplishment.periodEnd.toNumber()).to.equal(now + exampleHabitData.timeframe);
+      expect(createdHabit.accomplishment.periodTimesAccomplished.toNumber()).to.equal(0);
+      expect(createdHabit.beneficiary).to.equal(exampleHabitData.beneficiary);
+      expect(createdHabit.commitment.stakeAmount).to.equal(ethers.utils.parseEther("10"));
+      expect(createdHabit.commitment.tokenStaked).to.equal(erc20Mock.address);
+    });
   });
 
   describe("Done method", () => {

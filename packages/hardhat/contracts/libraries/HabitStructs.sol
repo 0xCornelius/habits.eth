@@ -8,6 +8,9 @@ library HabitStructs {
         uint256 timeframe;
         //Amount of times the habit has to be done to allow the bid amount to be withdrawn
         uint256 chainCommitment;
+        uint256 stakeAmount;
+        //0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE for ETH
+        address tokenStaked;
     }
 
     struct Accomplishment {
@@ -23,7 +26,6 @@ library HabitStructs {
         uint256 id;
         string name;
         string description;
-        uint256 stake;
         bool stakeClaimed;
         address beneficiary;
         Commitment commitment;

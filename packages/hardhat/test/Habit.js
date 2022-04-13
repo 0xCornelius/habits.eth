@@ -39,7 +39,7 @@ describe("Habit", () => {
 
     const HabitStructsContract = await ethers.getContractFactory("HabitStructs");
     habitStructs = await HabitStructsContract.deploy();
-    
+
     const NFTSVGContract = await ethers.getContractFactory("NFTSVG");
     NFTSVG = await NFTSVGContract.deploy();
 
@@ -67,9 +67,9 @@ describe("Habit", () => {
     await habit.transferOwnership(habitManager.address);
   })
 
-  it("Should mint habit", async () => {
+  it("Should mint habit with commitETH", async () => {
     await network.provider.send("evm_setNextBlockTimestamp", [now])
-    await habitManager.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
+    await habitManager.commitETH(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
     const createdHabit = await habit.getHabitData(0);
 
     expect(createdHabit.name).to.equal(exampleHabitData.name);
@@ -82,14 +82,32 @@ describe("Habit", () => {
     expect(createdHabit.accomplishment.periodEnd.toNumber()).to.equal(now + exampleHabitData.timeframe);
     expect(createdHabit.accomplishment.periodTimesAccomplished.toNumber()).to.equal(0);
     expect(createdHabit.beneficiary).to.equal(exampleHabitData.beneficiary);
-    expect(createdHabit.stake).to.equal(ethers.utils.parseEther("1"));
+    expect(createdHabit.commitment.stakeAmount).to.equal(ethers.utils.parseEther("1"));
+  });
+
+  it("Should mint habit with commit", async () => {
+    await network.provider.send("evm_setNextBlockTimestamp", [now])
+    await habitManager.commitETH(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
+    const createdHabit = await habit.getHabitData(0);
+
+    expect(createdHabit.name).to.equal(exampleHabitData.name);
+    expect(createdHabit.description).to.equal(exampleHabitData.description);
+    expect(createdHabit.commitment.timeframe.toNumber()).to.equal(exampleHabitData.timeframe);
+    expect(createdHabit.commitment.timesPerTimeframe.toNumber()).to.equal(exampleHabitData.timesPerTimeframe);
+    expect(createdHabit.commitment.chainCommitment.toNumber()).to.equal(exampleHabitData.chainCommitment);
+    expect(createdHabit.accomplishment.chain.toNumber()).to.equal(0);
+    expect(createdHabit.accomplishment.periodStart.toNumber()).to.equal(now);
+    expect(createdHabit.accomplishment.periodEnd.toNumber()).to.equal(now + exampleHabitData.timeframe);
+    expect(createdHabit.accomplishment.periodTimesAccomplished.toNumber()).to.equal(0);
+    expect(createdHabit.beneficiary).to.equal(exampleHabitData.beneficiary);
+    expect(createdHabit.commitment.stakeAmount).to.equal(ethers.utils.parseEther("1"));
   });
 
   describe("Done method", () => {
     it("Should increse the chain when calling done and there are times to accomplish in the period",
       async () => {
         await network.provider.send("evm_setNextBlockTimestamp", [now])
-        await habitManager.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
+        await habitManager.commitETH(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
         await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
         await habitManager.done(0, "proof1");
 
@@ -105,7 +123,7 @@ describe("Habit", () => {
     it("Should increse the chain, change the period start and end time and reset the period count when calling done and accomplishing all the period times",
       async () => {
         await network.provider.send("evm_setNextBlockTimestamp", [now])
-        await habitManager.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
+        await habitManager.commitETH(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
         await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
         await habitManager.done(0, "proof1");
         await network.provider.send("evm_setNextBlockTimestamp", [now + hour * 2])
@@ -120,21 +138,21 @@ describe("Habit", () => {
 
     it("Should revert when you call done as not owner", async () => {
       const [_, ad1] = await ethers.getSigners();
-      await habitManager.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
+      await habitManager.commitETH(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
       await expect(habitManager.connect(ad1).done(0, "proof1")).to.be.revertedWith("Only the owner can interact with the habit");
     })
 
     it("Should revert when you call done and period has not started", async () => {
       exampleHabitData.startTime = now + hour * 2;
       await network.provider.send("evm_setNextBlockTimestamp", [now])
-      await habitManager.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
+      await habitManager.commitETH(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
       await expect(habitManager.done(0, "proof1")).to.be.revertedWith("Habit period did not start yet.");
     })
 
     it("Should revert when you call done and habit has expired", async () => {
       await network.provider.send("evm_setNextBlockTimestamp", [now])
-      await habitManager.commit(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
+      await habitManager.commitETH(...Object.values(exampleHabitData), { value: ethers.utils.parseEther("1") })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour * 24 * 30])
       await expect(habitManager.done(0, "proof1")).to.be.revertedWith("HabitNotInValidState(0, true)");
     })
@@ -145,7 +163,7 @@ describe("Habit", () => {
       const [owner] = await ethers.getSigners();
       const stakeAmount = ethers.utils.parseEther("1");
       await network.provider.send("evm_setNextBlockTimestamp", [now])
-      await habitManager.commit(...Object.values(exampleHabitData), { value: stakeAmount })
+      await habitManager.commitETH(...Object.values(exampleHabitData), { value: stakeAmount })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
       await habitManager.done(0, "proof1");
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour * 2])
@@ -163,7 +181,7 @@ describe("Habit", () => {
       const [owner, ad1] = await ethers.getSigners();
       const stakeAmount = ethers.utils.parseEther("1");
       await network.provider.send("evm_setNextBlockTimestamp", [now])
-      await habitManager.commit(...Object.values(exampleHabitData), { value: stakeAmount })
+      await habitManager.commitETH(...Object.values(exampleHabitData), { value: stakeAmount })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
       await habitManager.done(0, "proof1");
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour * 2])
@@ -174,7 +192,7 @@ describe("Habit", () => {
     it("Should revert when chain commitment not done yet", async () => {
       const stakeAmount = ethers.utils.parseEther("1");
       await network.provider.send("evm_setNextBlockTimestamp", [now])
-      await habitManager.commit(...Object.values(exampleHabitData), { value: stakeAmount })
+      await habitManager.commitETH(...Object.values(exampleHabitData), { value: stakeAmount })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
       await habitManager.done(0, "proof1");
       await expect(habitManager.claimStake(0)).to.be.revertedWith("ChainCommitmentAccomplished(0, false)");
@@ -183,7 +201,7 @@ describe("Habit", () => {
     it("Should revert when stake already claimed", async () => {
       const stakeAmount = ethers.utils.parseEther("1");
       await network.provider.send("evm_setNextBlockTimestamp", [now])
-      await habitManager.commit(...Object.values(exampleHabitData), { value: stakeAmount })
+      await habitManager.commitETH(...Object.values(exampleHabitData), { value: stakeAmount })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
       await habitManager.done(0, "proof1");
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour * 2])
@@ -198,7 +216,7 @@ describe("Habit", () => {
       const [owner, ad1] = await ethers.getSigners();
       const stakeAmount = ethers.utils.parseEther("1");
       await network.provider.send("evm_setNextBlockTimestamp", [now])
-      await habitManager.commit(...Object.values(exampleHabitData), { value: stakeAmount })
+      await habitManager.commitETH(...Object.values(exampleHabitData), { value: stakeAmount })
       await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
       await habitManager.done(0, "proof1");
       await network.provider.send("evm_setNextBlockTimestamp", [now + exampleHabitData.timeframe * 2])

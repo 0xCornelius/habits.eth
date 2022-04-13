@@ -19,7 +19,6 @@ const cleanHabit = (contractHabit) => {
         description: contractHabit.description,
         beneficiary: contractHabit.beneficiary,
         stakeClaimed: contractHabit.stakeClaimed,
-        stake: ethers.utils.formatEther(contractHabit.stake),
         accomplishment: {
             chain: cAccomplishment.chain.toNumber(),
             periodEnd: cAccomplishment.periodEnd.toNumber(),
@@ -28,6 +27,7 @@ const cleanHabit = (contractHabit) => {
             proofs: cAccomplishment.proofs,
         },
         commitment: {
+            stake: ethers.utils.formatEther(cCommitment.stake),
             chainCommitment: cCommitment.chainCommitment.toNumber(),
             timeframe: cCommitment.timeframe.toNumber(),
             timesPerTimeframe: cCommitment.timesPerTimeframe.toNumber(),

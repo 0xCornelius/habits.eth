@@ -3,6 +3,7 @@ pragma solidity 0.8.4;
 
 import "./Habit.sol";
 import "./libraries/HabitStructs.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 error HabitAlreadyExpired(uint256 habitId);
 error HabitNotExpiredYet(uint256 habitId);
@@ -12,8 +13,38 @@ error ChainCommitmentAccomplished(uint256 habitId, bool accomplished);
 contract HabitManager {
     Habit public immutable habitContract;
 
+    address constant ethToken = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+    string constant ethSymbol = "ETH";
+
     constructor(Habit _habit) {
         habitContract = _habit;
+    }
+
+    function commitETH(
+        string memory habitName,
+        string memory description,
+        uint256 timeframe,
+        uint256 chainCommitment,
+        address beneficiary,
+        uint256 startTime,
+        uint256 timesPerTimeframe
+    ) public payable returns (uint256) {
+        HabitStructs.Commitment memory commitment = HabitStructs.Commitment(
+            timesPerTimeframe,
+            timeframe,
+            chainCommitment,
+            msg.value,
+            ethToken
+        );
+        return
+            _saveCommit(
+                habitName,
+                description,
+                beneficiary,
+                startTime,
+                commitment
+            );
     }
 
     function commit(
@@ -23,23 +54,50 @@ contract HabitManager {
         uint256 chainCommitment,
         address beneficiary,
         uint256 startTime,
-        uint256 timesPerTimeframe
-    ) public payable returns (uint256) {
-        HabitNFT.timeframeToDescription(timeframe);
-        uint256 habitId = habitContract.getCurrentHabitId();
+        uint256 timesPerTimeframe,
+        ERC20 stakeToken,
+        uint256 stakeAmount
+    ) public returns (uint256) {
+        stakeToken.transferFrom(msg.sender, address(this), stakeAmount);
         HabitStructs.Commitment memory commitment = HabitStructs.Commitment(
             timesPerTimeframe,
             timeframe,
-            chainCommitment
+            chainCommitment,
+            stakeAmount,
+            address(stakeToken)
         );
+        return
+            _saveCommit(
+                habitName,
+                description,
+                beneficiary,
+                startTime,
+                commitment
+            );
+    }
+
+    function _saveCommit(
+        string memory habitName,
+        string memory description,
+        address beneficiary,
+        uint256 startTime,
+        HabitStructs.Commitment memory commitment
+    ) internal returns (uint256) {
+        HabitNFT.timeframeToDescription(commitment.timeframe);
+        uint256 habitId = habitContract.getCurrentHabitId();
         string[] memory proofs;
         HabitStructs.Accomplishment memory accomplishment = HabitStructs
-            .Accomplishment(0, startTime, startTime + timeframe, 0, proofs);
+            .Accomplishment(
+                0,
+                startTime,
+                startTime + commitment.timeframe,
+                0,
+                proofs
+            );
         HabitStructs.HabitData memory habitData = HabitStructs.HabitData(
             habitId,
             habitName,
             description,
-            msg.value,
             false,
             beneficiary,
             commitment,
@@ -75,7 +133,13 @@ contract HabitManager {
             newPeriodEnd = newPeriodStart + habit.commitment.timeframe;
         }
 
-        habitContract.done(habitId, newProof, newPeriodStart, newPeriodEnd, newPeriodTimesAccomplished);
+        habitContract.done(
+            habitId,
+            newProof,
+            newPeriodStart,
+            newPeriodEnd,
+            newPeriodTimesAccomplished
+        );
     }
 
     function claimStake(uint256 habitId)
@@ -85,10 +149,16 @@ contract HabitManager {
         stakeNotClaimed(habitId)
     {
         habitContract.stakeClaimed(habitId);
-        (bool sent, ) = msg.sender.call{
-            value: habitContract.getHabitData(habitId).stake
-        }("");
-        require(sent, "Failed to send Ether");
+        HabitStructs.Commitment memory commitment = habitContract
+            .getHabitData(habitId)
+            .commitment;
+        if (commitment.tokenStaked == ethToken) {
+            (bool sent, ) = msg.sender.call{value: commitment.stakeAmount}("");
+            require(sent, "Failed to send Ether");
+        } else {
+            ERC20 tokenERC20 = ERC20(commitment.tokenStaked);
+            tokenERC20.transfer(msg.sender, commitment.stakeAmount);
+        }
     }
 
     function claimBrokenCommitment(uint256 habitId)
@@ -98,9 +168,19 @@ contract HabitManager {
         stakeNotClaimed(habitId)
     {
         habitContract.stakeClaimed(habitId);
-        HabitStructs.HabitData memory habit = habitContract.getHabitData(habitId);
-        (bool sent, ) = habit.beneficiary.call{value: habit.stake}("");
-        require(sent, "Failed to send Ether");
+        HabitStructs.HabitData memory habit = habitContract.getHabitData(
+            habitId
+        );
+
+        if (habit.commitment.tokenStaked == ethToken) {
+            (bool sent, ) = msg.sender.call{
+                value: habit.commitment.stakeAmount
+            }("");
+            require(sent, "Failed to send Ether");
+        } else {
+            ERC20 tokenERC20 = ERC20(habit.commitment.tokenStaked);
+            tokenERC20.transfer(msg.sender, habit.commitment.stakeAmount);
+        }
     }
 
     modifier stakeNotClaimed(uint256 habitId) {

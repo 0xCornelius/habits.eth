@@ -9,7 +9,6 @@ export default function HabitVisualizer({
     description,
     beneficiary,
     stakeClaimed,
-    stake,
     accomplishment,
     commitment,
     onDoneClicked
@@ -21,11 +20,12 @@ export default function HabitVisualizer({
         periodTimesAccomplished,
         proofs
     } = accomplishment;
-
+    
     const {
         chainCommitment,
         timeframe,
         timesPerTimeframe,
+        stake,
     } = commitment;
 
     const habitPeriodTimesLeft = timesPerTimeframe - periodTimesAccomplished;

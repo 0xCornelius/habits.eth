@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.4;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./libraries/HabitNFT.sol";
@@ -35,7 +34,7 @@ contract Habit is ERC721, Ownable {
                 habit.commitment.timeframe
             ),
             timesPerTimeframe: habit.commitment.timesPerTimeframe,
-            stake: habit.stake,
+            stake: habit.commitment.stakeAmount,
             beneficiary: habit.beneficiary
         });
         return HabitNFT.generateTokenURI(habitNFTData);

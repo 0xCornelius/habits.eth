@@ -148,17 +148,16 @@ contract HabitManager {
         chainCommitmentDone(habitId, true)
         stakeNotClaimed(habitId)
     {
-        habitContract.stakeClaimed(habitId);
         HabitStructs.Commitment memory commitment = habitContract
             .getHabitData(habitId)
             .commitment;
-        if (commitment.tokenStaked == ethToken) {
-            (bool sent, ) = msg.sender.call{value: commitment.stakeAmount}("");
-            require(sent, "Failed to send Ether");
-        } else {
-            ERC20 tokenERC20 = ERC20(commitment.tokenStaked);
-            tokenERC20.transfer(msg.sender, commitment.stakeAmount);
-        }
+
+        _claim(
+            msg.sender,
+            commitment.stakeAmount,
+            commitment.tokenStaked,
+            habitId
+        );
     }
 
     function claimBrokenCommitment(uint256 habitId)
@@ -167,19 +166,31 @@ contract HabitManager {
         chainCommitmentDone(habitId, false)
         stakeNotClaimed(habitId)
     {
-        habitContract.stakeClaimed(habitId);
         HabitStructs.HabitData memory habit = habitContract.getHabitData(
             habitId
         );
 
-        if (habit.commitment.tokenStaked == ethToken) {
-            (bool sent, ) = msg.sender.call{
-                value: habit.commitment.stakeAmount
-            }("");
+        _claim(
+            habit.beneficiary,
+            habit.commitment.stakeAmount,
+            habit.commitment.tokenStaked,
+            habitId
+        );
+    }
+
+    function _claim(
+        address to,
+        uint256 amount,
+        address token,
+        uint256 habitId
+    ) internal {
+        habitContract.stakeClaimed(habitId);
+        if (token == ethToken) {
+            (bool sent, ) = to.call{value: amount}("");
             require(sent, "Failed to send Ether");
         } else {
-            ERC20 tokenERC20 = ERC20(habit.commitment.tokenStaked);
-            tokenERC20.transfer(msg.sender, habit.commitment.stakeAmount);
+            ERC20 tokenERC20 = ERC20(token);
+            tokenERC20.transfer(to, amount);
         }
     }
 

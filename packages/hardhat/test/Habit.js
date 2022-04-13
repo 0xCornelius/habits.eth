@@ -174,7 +174,7 @@ describe("Habit", () => {
   })
 
   describe("ClaimStake", async () => {
-    it("Should return stake and mark it as claimed when calling claimStake and habit done", async () => {
+    it("Should return stake and mark it as claimed when calling claimStake and habit done with ETH", async () => {
       const [owner] = await ethers.getSigners();
       const stakeAmount = ethers.utils.parseEther("1");
       await network.provider.send("evm_setNextBlockTimestamp", [now])
@@ -188,6 +188,28 @@ describe("Habit", () => {
       const gasSpent = tx.effectiveGasPrice.mul(tx.cumulativeGasUsed);
       const balanceAfterClaim = await ethers.provider.getBalance(owner.address);
       expect(balanceAfterClaim.add(gasSpent).sub(stakeAmount)).to.equal(balanceBeforeClaim);
+      const createdHabit = await habit.getHabitData(0);
+      expect(createdHabit.stakeClaimed).to.be.true;
+    })
+
+    it("Should return stake and mark it as claimed when calling claimStake and habit done with ERC20", async () => {
+      const [owner] = await ethers.getSigners();
+      const stakeAmount = ethers.utils.parseEther("10");
+      await network.provider.send("evm_setNextBlockTimestamp", [now])
+      await erc20Mock.increaseAllowance(habitManager.address, ethers.utils.parseEther("10"));
+      await habitManager.commit(...Object.values(exampleHabitData), erc20Mock.address, ethers.utils.parseEther("10"))
+      await network.provider.send("evm_setNextBlockTimestamp", [now + hour])
+      await habitManager.done(0, "proof1");
+      await network.provider.send("evm_setNextBlockTimestamp", [now + hour * 2])
+      await habitManager.done(0, "proof1");
+      const balanceBeforeClaim = await erc20Mock.balanceOf(owner.address);
+      const ethBalanceBeforeClaim = await ethers.provider.getBalance(owner.address);
+      const tx = await (await habitManager.claimStake(0)).wait();
+      const gasSpent = tx.effectiveGasPrice.mul(tx.cumulativeGasUsed);
+      const ethBalanceAfterClaim = await ethers.provider.getBalance(owner.address);
+      const balanceAfterClaim = await erc20Mock.balanceOf(owner.address);
+      expect(balanceAfterClaim.sub(stakeAmount)).to.equal(balanceBeforeClaim);
+      expect(ethBalanceAfterClaim.add(gasSpent)).to.equal(ethBalanceBeforeClaim);
       const createdHabit = await habit.getHabitData(0);
       expect(createdHabit.stakeClaimed).to.be.true;
     })
@@ -236,10 +258,9 @@ describe("Habit", () => {
       await habitManager.done(0, "proof1");
       await network.provider.send("evm_setNextBlockTimestamp", [now + exampleHabitData.timeframe * 2])
       const balanceBeforeClaim = await ethers.provider.getBalance(ad1.address);
-      const tx = await (await habitManager.connect(ad1).claimBrokenCommitment(0)).wait();
-      const gasSpent = tx.effectiveGasPrice.mul(tx.cumulativeGasUsed);
+      await habitManager.claimBrokenCommitment(0);
       const balanceAfterClaim = await ethers.provider.getBalance(ad1.address);
-      expect(balanceAfterClaim.add(gasSpent).sub(stakeAmount)).to.equal(balanceBeforeClaim);
+      expect(balanceAfterClaim.sub(stakeAmount)).to.equal(balanceBeforeClaim);
       const createdHabit = await habit.getHabitData(0);
       expect(createdHabit.stakeClaimed).to.be.true;
     })

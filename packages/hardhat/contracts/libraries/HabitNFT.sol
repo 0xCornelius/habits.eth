@@ -103,13 +103,13 @@ library HabitNFT {
             chainCommitment: _chainCommitment,
             timeframeString: _timeframeString,
             timesPerTimeframe: _timesPerTimeframe,
-            stake: string(
+            stakeAmount: string(
                 abi.encodePacked(
                     fixedPointToDecimalString(_stake, 2),
-                    " ",
-                    "ETH"
                 )
             ),
+            stakeTokenSymbol: "ETH",
+            stakeTokenAddress: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
             beneficiary: addressToString(_beneficiary),
             name: _name
         });

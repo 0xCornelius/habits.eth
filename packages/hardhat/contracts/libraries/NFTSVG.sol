@@ -69,14 +69,25 @@ library NFTSVG {
         uint256 z = (x + 1) / 2;
         y = x;
         while (
-            z < y /// @why3 invariant { to_int !_z = div ((div (to_int arg_x) (to_int !_y)) + (to_int !_y)) 2 }
-        ) /// @why3 invariant { to_int arg_x < (to_int !_y + 1) * (to_int !_y + 1) }
-        /// @why3 invariant { to_int arg_x < (to_int !_z + 1) * (to_int !_z + 1) }
+            z < y /// @why3 invariant { to_int !_z = div ((div (to_int arg_x) (to_int !_y)) + (to_int !_y)) 2 } /// @why3 invariant { to_int arg_x < (to_int !_y + 1) * (to_int !_y + 1) }
+        ) /// @why3 invariant { to_int arg_x < (to_int !_z + 1) * (to_int !_z + 1) }
         /// @why3 variant { to_int !_y }
         {
             y = z;
             z = (x / z + z) / 2;
         }
+    }
+
+    function getSlice(
+        uint256 begin,
+        uint256 end,
+        string memory text
+    ) private pure returns (string memory slice) {
+        bytes memory a = new bytes(end - begin + 1);
+        for (uint256 i = 0; i <= end - begin; i++) {
+            a[i] = bytes(text)[i + begin - 1];
+        }
+        return string(abi.encodePacked(a));
     }
 
     function _generateStyleDefs(uint256 _percentage)
@@ -94,7 +105,19 @@ library NFTSVG {
     }
 
     function _generateSVGDefs() private pure returns (string memory svg) {
-        svg = '<defs><path id="SVGID_0" class="st2" d="M580.71 1042.17c0 42.09-34.44 76.54-76.54 76.54H76.54c-42.09 0-76.54-34.44-76.54-76.54V76.54C0 34.44 34.44 0 76.54 0h427.64c42.09 0 76.54 34.44 76.54 76.54v965.63z"/><path id="text-path-a" d="M81.54 1095.995a57.405 57.405 0 0 1-57.405-57.405V81.54A57.405 57.405 0 0 1 81.54 24.135h417.64a57.405 57.405 0 0 1 57.405 57.405v955.64a57.405 57.405 0 0 1-57.405 57.405z"/><path id="text-path-executed" d="M290.35 348.77a139.5 139.5 0 1 1 0 279 139.5 139.5 0 1 1 0-279"/><path id="text-path-left" d="M290.35 348.77a-139.5-139.5 0 1 0 0 291 139.5 139.5 0 1 0 0-291"/><radialGradient id="SVGID_3" cx="334.831" cy="592.878" r="428.274" fx="535.494" fy="782.485" gradientUnits="userSpaceOnUse"><stop offset="0"/><stop offset=".11" stop-color="#0d1f29"/><stop offset=".28" stop-color="#1f4860"/><stop offset=".45" stop-color="#2e6a8d"/><stop offset=".61" stop-color="#3985b0"/><stop offset=".76" stop-color="#4198c9"/><stop offset=".89" stop-color="#46a3d9"/><stop offset="1" stop-color="#1890ff"/>&gt;</radialGradient><linearGradient id="SVGID_1" gradientUnits="userSpaceOnUse" x1="290.353" y1="0" x2="290.353" y2="1118.706"><stop offset="0" stop-color="#1890ff"/><stop offset=".105" stop-color="#186ebb"/><stop offset=".292" stop-color="#135997"/><stop offset=".47" stop-color="#0e416c"/><stop offset=".635" stop-color="#121612"/><stop offset=".783" stop-color="#060600"/><stop offset=".91" stop-color="#010100"/><stop offset="1"/></linearGradient><clipPath id="SVGID_2"><use xlink:href="#SVGID_0" overflow="visible"/></clipPath></defs>';
+        svg = string(
+            abi.encodePacked('<defs><path id="SVGID_0" class="st2" d="M580.71 1042.17c0 42.09-34.44 76.54-76.54 76.54H76.54c-42.09 0-76.54-34.44-76.54-76.54V76.54C0 34.44 34.44 0 76.54 0h427.64c42.09 0 76.54 34.44 76.54 76.54v965.63z"/><path id="text-path-a" d="M81.54 1095.995a57.405 57.405 0 0 1-57.405-57.405V81.54A57.405 57.405 0 0 1 81.54 24.135h417.64a57.405 57.405 0 0 1 57.405 57.405v955.64a57.405 57.405 0 0 1-57.405 57.405z"/><path id="text-path-executed" d="M290.35 348.77a139.5 139.5 0 1 1 0 279 139.5 139.5 0 1 1 0-279"/><path id="text-path-left" d="M290.35 348.77a-139.5-139.5 0 1 0 0 291 139.5 139.5 0 1 0 0-291"/><radialGradient id="SVGID_3" cx="334.831" cy="592.878" r="428.274" fx="535.494" fy="782.485" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#1a4055"/><stop offset=".11" stop-color="#1a4055"/><stop offset=".28" stop-color="#1f4860"/><stop offset=".45" stop-color="#2e6a8d"/><stop offset=".61" stop-color="#3985b0"/><stop offset=".76" stop-color="#4198c9"/><stop offset=".89" stop-color="#46a3d9"/><stop offset="1" stop-color="#1890ff"/>&gt;</radialGradient>',
+        '<radialGradient id="SVGID_4" cx="334.831" cy="592.878" r="428.274" fx="535.494" fy="782.485" gradientUnits="userSpaceOnUse">',
+        '<stop offset="0" stop-color="#042f1b"/>',
+        '<stop offset=".11" stop-color="#042f1b"/>',
+        '<stop offset=".28" stop-color="#086037"/>',
+        '<stop offset=".45" stop-color="#0c7d48"/>',
+        '<stop offset=".61" stop-color="#0f9757"/>',
+        '<stop offset=".76" stop-color="#13b367"/>',
+        '<stop offset=".89" stop-color="#14cc75"/>',
+        '<stop offset="1" stop-color="#17e383"/>&gt;</radialGradient><linearGradient id="SVGID_1" gradientUnits="userSpaceOnUse" x1="290.353" y1="0" x2="290.353" y2="1118.706"><stop offset="0" stop-color="#1890ff"/><stop offset=".105" stop-color="#186ebb"/><stop offset=".292" stop-color="#135997"/><stop offset=".47" stop-color="#0e416c"/><stop offset=".635" stop-color="#121612"/><stop offset=".783" stop-color="#060600"/><stop offset=".91" stop-color="#010100"/><stop offset="1"/></linearGradient><clipPath id="SVGID_2"><use xlink:href="#SVGID_0" overflow="visible"/></clipPath></defs>'
+            )
+        );
     }
 
     function _generateSVGBackground() private pure returns (string memory svg) {
@@ -167,31 +190,33 @@ library NFTSVG {
         pure
         returns (string memory svg)
     {
-        svg = _getDots(200);
+        svg = _getDots(_chain, _chainCommitment);
     }
 
-    function _getDots(uint256 amount) private pure returns (string memory svg) {
-        string memory svg;
-
-        uint256 dotsPerLine = sqrt(amount);
+    function _getDots(uint256 _chain, uint256 _chainCommitment) private pure returns (string memory svg) {
+        uint256 dotsPerLine = (_chainCommitment <= 35) ? 10 : sqrt(_chainCommitment);
 
         uint256 scale = ((100 * 100) / (10 * dotsPerLine));
 
         uint256 initialCX = 80;
         uint256 initialCY = 300;
 
-
         uint256 cxStep = (45 * scale) / 100;
         uint256 cyStep = (50 * scale) / 100;
 
-        for (uint256 i; i < amount; ++i) {
+        for (uint256 i; i < _chainCommitment; ++i) {
             svg = string(
                 abi.encodePacked(
                     svg,
                     dot(
-                        Strings.toString(initialCX + cxStep * (i % dotsPerLine)),
-                        Strings.toString(initialCY + cyStep * (i / dotsPerLine)),
-                        scale
+                        Strings.toString(
+                            initialCX + cxStep * (i % dotsPerLine)
+                        ),
+                        Strings.toString(
+                            initialCY + cyStep * (i / dotsPerLine)
+                        ),
+                        scale,
+                        i < _chain
                     )
                 )
             );
@@ -202,8 +227,10 @@ library NFTSVG {
     function dot(
         string memory cx,
         string memory cy,
-        uint256 scale
+        uint256 scale,
+        bool done
     ) private pure returns (string memory svg) {
+        string memory fill = (done) ? '#SVGID_4' : '#SVGID_3';
         svg = string(
             abi.encodePacked(
                 '<circle cx="',
@@ -212,7 +239,9 @@ library NFTSVG {
                 cy,
                 '" r="',
                 Strings.toString((12 * scale) / 100),
-                '" fill="url(#SVGID_3)"/>'
+                '" fill="url(',
+                fill,
+                ')"/>'
             )
         );
     }
@@ -232,7 +261,9 @@ library NFTSVG {
                 ' ',
                 _stakeTokenSymbol,
                 '</tspan><tspan x="0" y="209.46" class="st36 st38 st44">Beneficiary: ',
-                _beneficiary,
+                getSlice(1, 5, _beneficiary),
+                '....',
+                getSlice(38, 42, _beneficiary),
                 '</tspan></text><text><tspan x="68.3554" y="1050.5089" class="st36 st38 st48"></tspan></text>'
             )
         );
@@ -255,14 +286,14 @@ library NFTSVG {
             generateSVG(
                 HabitSVGParams({
                     habitId: 1,
-                    chain: 24,
-                    chainCommitment: 200,
+                    chain: 2,
+                    chainCommitment: 35,
                     timeframeString: 'Weekly',
                     timesPerTimeframe: 4,
                     stakeAmount: '10.5',
                     stakeTokenSymbol: 'USDC',
                     stakeTokenAddress: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
-                    beneficiary: '0xd8dA6....96045',
+                    beneficiary: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
                     name: 'Habit name'
                 })
             );

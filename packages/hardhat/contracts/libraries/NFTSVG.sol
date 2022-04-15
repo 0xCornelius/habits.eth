@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity 0.8.13;
+pragma solidity 0.8.4;
 
 import '@openzeppelin/contracts/utils/Strings.sol';
 
@@ -176,7 +176,7 @@ library NFTSVG {
             abi.encodePacked(
                 '<text><tspan x="68.3549" y="146.2414" class="st36 st38 st39 st40">',
                 _habitName,
-                '</tspan></tspan></text><text x="68.3549" y="225.9683" class="st36 st49 st50">',
+                '</tspan></text><text x="68.3549" y="225.9683" class="st36 st49 st50">',
                 _timesPerTimeframe.toString(),
                 ' times ',
                 _timeframeString,

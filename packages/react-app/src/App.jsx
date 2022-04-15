@@ -32,6 +32,7 @@ import { Transactor, Web3ModalSetup } from "./helpers";
 import { Home, ExampleUI, Hints, Subgraph } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 import CreateHabit from "./views/CreateHabit";
+import NFTGallery from "./views/NFTGallery";
 
 const { ethers } = require("ethers");
 /*
@@ -70,6 +71,31 @@ const providers = [
   `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`,
   "https://rpc.scaffoldeth.io:48544",
 ];
+
+const cleanHabit = (contractHabit) => {
+  const cAccomplishment = contractHabit.accomplishment;
+  const cCommitment = contractHabit.commitment;
+  return {
+    id: contractHabit.id.toNumber(),
+    name: contractHabit.name,
+    description: contractHabit.description,
+    beneficiary: contractHabit.beneficiary,
+    stakeClaimed: contractHabit.stakeClaimed,
+    accomplishment: {
+      chain: cAccomplishment.chain.toNumber(),
+      periodEnd: cAccomplishment.periodEnd.toNumber(),
+      periodStart: cAccomplishment.periodStart.toNumber(),
+      periodTimesAccomplished: cAccomplishment.periodTimesAccomplished.toNumber(),
+      proofs: cAccomplishment.proofs,
+    },
+    commitment: {
+      stakeAmount: ethers.utils.formatEther(cCommitment.stakeAmount),
+      chainCommitment: cCommitment.chainCommitment.toNumber(),
+      timeframe: cCommitment.timeframe.toNumber(),
+      timesPerTimeframe: cCommitment.timesPerTimeframe.toNumber(),
+    },
+  }
+}
 
 function App(props) {
   // specify all the chains your app is available on. Eg: ['localhost', 'mainnet', ...otherNetworks ]
@@ -245,6 +271,9 @@ function App(props) {
 
   const faucetAvailable = localProvider && localProvider.connection && targetNetwork.name.indexOf("local") !== -1;
 
+  const allHabits = useContractReader(readContracts, "Habit", "getAllHabits");
+  const userHabits = allHabits ? allHabits.filter((h) => h.owner == address).map(h => cleanHabit(h.habitData)) : [];
+
   return (
     <div className="App">
       {/* ✏️ Edit the header and change the title to your project name */}
@@ -264,8 +293,11 @@ function App(props) {
         <Menu.Item key="/create">
           <Link to="/create">Create habit</Link>
         </Menu.Item>
+        <Menu.Item key="/gallery">
+          <Link to="/gallery">Gallery</Link>
+        </Menu.Item>
       </Menu>
-      
+
 
       <Switch>
         <Route exact path="/">
@@ -278,7 +310,23 @@ function App(props) {
             price={price}
             tx={tx}
             writeContracts={writeContracts}
-            readContracts={readContracts} />
+            readContracts={readContracts}
+            userHabits={userHabits}
+            allHabits={allHabits} />
+        </Route>
+        <Route exact path="/gallery">
+          {/* pass in any web3 props to this Home component. For example, yourLocalBalance */}
+          <NFTGallery address={address}
+            userSigner={userSigner}
+            mainnetProvider={mainnetProvider}
+            localProvider={localProvider}
+            yourLocalBalance={yourLocalBalance}
+            price={price}
+            tx={tx}
+            writeContracts={writeContracts}
+            readContracts={readContracts}
+            userHabits={userHabits}
+            allHabits={allHabits} />
         </Route>
         <Route exact path="/create">
           <CreateHabit tx={tx} writeContracts={writeContracts} />

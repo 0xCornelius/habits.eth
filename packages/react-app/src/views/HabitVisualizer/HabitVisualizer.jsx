@@ -25,7 +25,7 @@ export default function HabitVisualizer({
         chainCommitment,
         timeframe,
         timesPerTimeframe,
-        stake,
+        stakeAmount,
     } = commitment;
 
     const habitPeriodTimesLeft = timesPerTimeframe - periodTimesAccomplished;
@@ -77,7 +77,7 @@ export default function HabitVisualizer({
                         </div>
                         <div className="row">
                             <div className="label">Stake: </div>
-                            <div className="value">{stake} ETH</div>
+                            <div className="value">{stakeAmount} ETH</div>
                         </div>
                         <div className="progress-visualizer">
                             {[...Array(chainCommitment)].map((e, i) =>

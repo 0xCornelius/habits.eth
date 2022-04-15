@@ -51,7 +51,7 @@ export default function CreateHabit({ tx, writeContracts }) {
     const createNewHabit = async () => {
         const stake = createNewHabitForm.getFieldsValue().stake;
         const txValue = ethers.utils.parseEther(stake);
-        const result = tx(writeContracts.HabitManager.commit(...Object.values(getHabitCreationData()), { value: txValue }), update => {
+        const result = tx(writeContracts.HabitManager.commitETH(...Object.values(getHabitCreationData()), { value: txValue }), update => {
             if (update && (update.status === "confirmed" || update.status === 1)) {
                 history.push("/");
             }

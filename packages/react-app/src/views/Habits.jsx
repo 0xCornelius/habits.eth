@@ -10,31 +10,6 @@ import HabitVisualizer from "./HabitVisualizer/HabitVisualizer";
 import { LoadingOutlined } from '@ant-design/icons';
 import { Link, Redirect } from "react-router-dom";
 
-const cleanHabit = (contractHabit) => {
-    const cAccomplishment = contractHabit.accomplishment;
-    const cCommitment = contractHabit.commitment;
-    return {
-        id: contractHabit.id.toNumber(),
-        name: contractHabit.name,
-        description: contractHabit.description,
-        beneficiary: contractHabit.beneficiary,
-        stakeClaimed: contractHabit.stakeClaimed,
-        accomplishment: {
-            chain: cAccomplishment.chain.toNumber(),
-            periodEnd: cAccomplishment.periodEnd.toNumber(),
-            periodStart: cAccomplishment.periodStart.toNumber(),
-            periodTimesAccomplished: cAccomplishment.periodTimesAccomplished.toNumber(),
-            proofs: cAccomplishment.proofs,
-        },
-        commitment: {
-            stake: ethers.utils.formatEther(cCommitment.stake),
-            chainCommitment: cCommitment.chainCommitment.toNumber(),
-            timeframe: cCommitment.timeframe.toNumber(),
-            timesPerTimeframe: cCommitment.timesPerTimeframe.toNumber(),
-        },
-    }
-}
-
 export default function Habits({
     address,
     mainnetProvider,
@@ -44,9 +19,9 @@ export default function Habits({
     tx,
     readContracts,
     writeContracts,
+    userHabits,
+    allHabits
 }) {
-    const allHabits = useContractReader(readContracts, "Habit", "getAllHabits");
-    const userHabits = allHabits ? allHabits.filter((h) => h.owner == address).map(h => cleanHabit(h.habitData)) : [];
 
     const onDoneClicked = async (habitId) => {
         const result = tx(writeContracts.HabitManager.done(habitId, "proof"), update => { });
